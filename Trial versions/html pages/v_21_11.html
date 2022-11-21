@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html lang="eng">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            text-align: center;
+        }
+
+        .column {
+            float: left;
+            width: 33%;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+    <title>Door System</title>
+    <style>
+        body, h1, h2, h3, h4, h5, h6 {
+            font-family: Trebuchet MS, sans-serif;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <h2>ESP32-CAM</h2>
+    <div style="padding: 10px ; background-color:#dcedc1 " class="row">
+        <h3>Stream Video</h3>
+        <div class="column">
+            <button onclick="startStream();">start stream</button>
+        </div>
+        <div class="column">
+            <figure>
+                <div id="stream-container" class="image-container hidden">
+                    <img id="stream" src="" crossorigin>
+                </div>
+            </figure>
+        </div>
+        <div class="column">
+
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color: #a8e6cf" class="row">
+        <h3>Viola Jones</h3>
+        <div class="column">
+            <button onclick="capture();">Take High Quality Still</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_with_rec" width="25%">
+        </div>
+        <div class="column">
+
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ffd3b6" class="row">
+        <h3>Smile Test</h3>
+        <div class="column">
+            <button onclick="smile();" id="smile_btn" disabled="disabled">Im Smiling</button>
+            <button onclick="testSmile()" id="smile_test_btn">Smile Test</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_smile" width="25%">
+        </div>
+        <div class="column">
+            <output id="smile_test_output"></output>
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ffaaa5" class="row">
+        <h3>Flash Test</h3>
+        <div class="column">
+            <button onclick="capture();">Take High Quality Still</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_flash" width="25%">
+        </div>
+        <div class="column">
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ff8b94" class="row">
+        <h3>Who Is It?</h3>
+        <div class="column">
+            <button onclick="capture()">Face Anchors Points</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_rec" width="25%">
+        </div>
+        <div class="column">
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+    const IDLE = 0;
+    const NO_SMILE = 1;
+    const REC_SMILE = 2;
+    const RESET_SMILE = 3;
+    var smile_status = IDLE;
+    var smile_time_out;
+
+    function capture()
+    {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', "/capture", true);
+        xhr.send();
+    }
+    function testSmile() {
+        var output_txt = document.getElementById("smile_test_output");
+        var smile_button = document.getElementById("smile_btn");
+        var smile_test_button = document.getElementById("smile_test_btn");
+        if (smile_status === IDLE) {  //search smile
+            output_txt.value = "Smile Please";
+            smile_status = NO_SMILE;
+            smile_test_button.disabled = true;
+            smile_button.disabled = false;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else if (smile_status === NO_SMILE) {  //reset
+            output_txt.value = "Smile Not Found - resetting";
+            smile_test_button.disabled = true;
+            smile_button.disabled = true;
+            smile_status = RESET_SMILE;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else if (smile_status === REC_SMILE) {      //good
+            output_txt.value = "Congrats- Smile Captured";
+            smile_status = RESET_SMILE;
+            smile_button.disabled = true;
+            smile_test_button.disabled = true;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else {
+            output_txt.value = "";
+            smile_status = IDLE;
+            smile_test_button.disabled = false;
+            smile_button.disabled = true;
+        }
+    }
+
+    function smile() {
+        smile_status = REC_SMILE;
+        testSmile();
+        clearTimeout(smile_time_out);
+    }
+
+    function stream(){
+        
+    }
+
+</script>
+</html>
