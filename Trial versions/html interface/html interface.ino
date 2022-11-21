@@ -1,45 +1,10 @@
+
+
+
 #include "esp_camera.h"
 #include <WiFi.h>
-
-//
-// WARNING!!! PSRAM IC required for UXGA resolution and high JPEG quality
-//            Ensure ESP32 Wrover Module or other board with PSRAM is selected
-//            Partial images will be transmitted if image exceeds buffer size
-//
-//            You must select partition scheme from the board menu that has at least 3MB APP space.
-//            Face Recognition is DISABLED for ESP32 and ESP32-S2, because it takes up from 15 
-//            seconds to process single frame. Face Detection is ENABLED if PSRAM is enabled as well
-
-// ===================
-// Select camera model
-// ===================
-//#define CAMERA_MODEL_WROVER_KIT // Has PSRAM
-//#define CAMERA_MODEL_ESP_EYE // Has PSRAM
-//#define CAMERA_MODEL_ESP32S3_EYE // Has PSRAM
-//#define CAMERA_MODEL_M5STACK_PSRAM // Has PSRAM
-//#define CAMERA_MODEL_M5STACK_V2_PSRAM // M5Camera version B Has PSRAM
-//#define CAMERA_MODEL_M5STACK_WIDE // Has PSRAM
-//#define CAMERA_MODEL_M5STACK_ESP32CAM // No PSRAM
-//#define CAMERA_MODEL_M5STACK_UNITCAM // No PSRAM
-#define CAMERA_MODEL_AI_THINKER // Has PSRAM
-//#define CAMERA_MODEL_TTGO_T_JOURNAL // No PSRAM
-// ** Espressif Internal Boards **
-//#define CAMERA_MODEL_ESP32_CAM_BOARD
-//#define CAMERA_MODEL_ESP32S2_CAM_BOARD
-//#define CAMERA_MODEL_ESP32S3_CAM_LCD
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp32-cam-take-photo-display-web-server/
-  
-  IMPORTANT!!! 
-   - Select Board "AI Thinker ESP32-CAM"
-   - GPIO 0 must be connected to GND to upload a sketch
-   - After connecting GPIO 0 to GND, press the ESP32-CAM on-board RESET button to put your board in flashing mode
-  
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*********/
-
+#include "FS.h"                // SD Card ESP32
+#include "SD_MMC.h"            // SD Card ESP32
 #include "WiFi.h"
 #include "esp_camera.h"
 #include "esp_timer.h"
@@ -53,6 +18,17 @@
 #include <SPIFFS.h>
 #include <FS.h>
 #include <SD_MMC.h>
+#include "esp_camera.h"
+#include "Arduino.h"
+#include <EEPROM.h>            // read and write from flash memory
+
+
+#define CAMERA_MODEL_AI_THINKER // Has PSRAM
+// define the number of bytes you want to access
+#define EEPROM_SIZE 1
+
+
+int pictureNumber = 0;
 
 // Replace with your network credentials
 
@@ -86,52 +62,158 @@ boolean takeNewPhoto = false;
 #define PCLK_GPIO_NUM     22
 
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
+<!DOCTYPE HTML>
+<html lang="eng">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { text-align:center; }
-    .vert { margin-bottom: 10%; }
-    .hori{ margin-bottom: 0%; }
-  </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            text-align: center;
+        }
+
+        .column {
+            float: left;
+            width: 33%;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+    <title>Door System</title>
+    <style>
+        body, h1, h2, h3, h4, h5, h6 {
+            font-family: Trebuchet MS, sans-serif;
+        }
+    </style>
 </head>
 <body>
-  <div id="container">
-    <h2>ESP32-CAM Last Photo</h2>
-    <p>It might take more than 5 seconds to capture a photo.</p>
-    <p>
-      <button onclick="rotatePhoto();">ROTATE</button>
-      <button onclick="capturePhoto()">CAPTURE PHOTO</button>
-      <button onclick="location.reload();">REFRESH PAGE</button>
-    </p>
-  </div>
-  <div><img src="saved-photo" id="photo" width="70%"></div>
+<div id="container">
+    <h2>ESP32-CAM</h2>
+    <div style="padding: 10px ; background-color:#dcedc1 " class="row">
+        <h3>Stream Video</h3>
+        <div class="column">
+            <button onclick="capture();">Take High Quality Still</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo" width="25%">
+        </div>
+        <div class="column">
+
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color: #a8e6cf" class="row">
+        <h3>Viola Jones</h3>
+        <div class="column">
+            <button onclick="capture();">Take High Quality Still</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_with_rec" width="25%">
+        </div>
+        <div class="column">
+
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ffd3b6" class="row">
+        <h3>Smile Test</h3>
+        <div class="column">
+            <button onclick="smile();" id="smile_btn" disabled="disabled">Im Smiling</button>
+            <button onclick="testSmile()" id="smile_test_btn">Smile Test</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_smile" width="25%">
+        </div>
+        <div class="column">
+            <output id="smile_test_output"></output>
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ffaaa5" class="row">
+        <h3>Flash Test</h3>
+        <div class="column">
+            <button onclick="capture();">Take High Quality Still</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_flash" width="25%">
+        </div>
+        <div class="column">
+        </div>
+    </div>
+    <div style="padding: 10px ; background-color:#ff8b94" class="row">
+        <h3>Who Is It?</h3>
+        <div class="column">
+            <button onclick="capture()">Face Anchors Points</button>
+        </div>
+        <div class="column">
+            <img src="temp_face.jpg" id="photo_rec" width="25%">
+        </div>
+        <div class="column">
+        </div>
+    </div>
+</div>
+
 </body>
 <script>
-  var deg = 0;
-  function capturePhoto() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', "/capture", true);
-    xhr.send();
-  }
-  function rotatePhoto() {
-    var img = document.getElementById("photo");
-    deg += 90;
-    if(isOdd(deg/90)){ document.getElementById("container").className = "vert"; }
-    else{ document.getElementById("container").className = "hori"; }
-    img.style.transform = "rotate(" + deg + "deg)";
-  }
-  function isOdd(n) { return Math.abs(n % 2) == 1; }
+    const IDLE = 0;
+    const NO_SMILE = 1;
+    const REC_SMILE = 2;
+    const RESET_SMILE = 3;
+    var smile_status = IDLE;
+    var smile_time_out;
+
+    function capture()
+    {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', "/capture", true);
+        xhr.send();
+    }
+    function testSmile() {
+        var output_txt = document.getElementById("smile_test_output");
+        var smile_button = document.getElementById("smile_btn");
+        var smile_test_button = document.getElementById("smile_test_btn");
+        if (smile_status === IDLE) {  //search smile
+            output_txt.value = "Smile Please";
+            smile_status = NO_SMILE;
+            smile_test_button.disabled = true;
+            smile_button.disabled = false;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else if (smile_status === NO_SMILE) {  //reset
+            output_txt.value = "Smile Not Found - resetting";
+            smile_test_button.disabled = true;
+            smile_button.disabled = true;
+            smile_status = RESET_SMILE;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else if (smile_status === REC_SMILE) {      //good
+            output_txt.value = "Congrats- Smile Captured";
+            smile_status = RESET_SMILE;
+            smile_button.disabled = true;
+            smile_test_button.disabled = true;
+            smile_time_out = setTimeout(testSmile, 5000);
+        } else {
+            output_txt.value = "";
+            smile_status = IDLE;
+            smile_test_button.disabled = false;
+            smile_button.disabled = true;
+        }
+    }
+
+    function smile() {
+        smile_status = REC_SMILE;
+        testSmile();
+        clearTimeout(smile_time_out);
+    }
+
 </script>
-</html>)rawliteral";
+</html>
+)rawliteral";
 
 void setup() {
   // Serial port for debugging purposes
   Serial.begin(115200);
 
-  // Connect to Wi-Fi
- 
-  //NEW WIFI CODE
+  // Connect to Wi-Fi\Access
   WiFi.softAP(ssid, password);
   IPAddress IP = WiFi.softAPIP();
 
@@ -139,7 +221,7 @@ void setup() {
 
   // Print ESP32 Local IP Address
   Serial.print("Camera Ready! Use '");
-  Serial.print(IP);
+  Serial.println(IP);
   Serial.println("' to connect");
 
   // Turn-off the 'brownout detector'
@@ -211,51 +293,10 @@ void loop() {
   delay(1);
 }
 
-// Check if photo capture was successful
-bool checkPhoto( fs::FS &fs ) {
-  File f_pic = fs.open( FILE_PHOTO );
-  unsigned int pic_sz = f_pic.size();
-  return ( pic_sz > 100 );
-}
-
 // Capture Photo and Save it to SPIFFS
 void capturePhotoSaveSpiffs( void ) {
-  camera_fb_t * fb = NULL; // pointer
-  bool ok = 0; // Boolean indicating if the picture has been taken correctly
-
-  do {
-    // Take a photo with the camera
-    Serial.println("Taking a photo...");
-
-    fb = esp_camera_fb_get();
-    if (!fb) {
-      Serial.println("Camera capture failed");
-      return;
-    }
-
-    // Photo file name
-    Serial.printf("Picture file name: %s\n", FILE_PHOTO);
-    File file = SPIFFS.open(FILE_PHOTO, FILE_WRITE);
-
-    // Insert the data in the photo file
-    if (!file) {
-      Serial.println("Failed to open file in writing mode");
-    }
-    else {
-      file.write(fb->buf, fb->len); // payload (image), payload length
-      Serial.print("The picture has been saved in ");
-      Serial.print(FILE_PHOTO);
-      Serial.print(" - Size: ");
-      Serial.print(file.size());
-      Serial.println(" bytes");
-    }
-    // Close the file
-    file.close();
-    esp_camera_fb_return(fb);
-
-    // check if file has been correctly saved in SPIFFS
-    ok = checkPhoto(SPIFFS);
-  } while ( 0 );
+  Serial.begin(115200);
+  Serial.println("trying to take photo");
 }
 
 
