@@ -33,7 +33,7 @@ static const char *TAG = "camera_httpd";
 #define CONFIG_ESP_FACE_DETECT_ENABLED 1
 // Face Recognition takes upward from 15 seconds per frame on chips other than ESP32S3
 // Makes no sense to have it enabled for them
-#if CONFIG_IDF_TARGET_ESP32S3
+#if 1//CONFIG_IDF_TARGET_ESP32S3
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 1
 #else
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 0
@@ -254,26 +254,31 @@ static void draw_face_boxes(fb_data_t *fb, std::list<dl::detect::result_t> *resu
 static int run_face_recognition(fb_data_t *fb, std::list<dl::detect::result_t> *results)
 {
     std::vector<int> landmarks = results->front().keypoint;
-    int id = -1;
+    int id = 1;//-1;
 
     Tensor<uint8_t> tensor;
     tensor.set_element((uint8_t *)fb->data).set_shape({fb->height, fb->width, 3}).set_auto_free(false);
-
+    //ESP_LOGD(TAG, "GO1");
     int enrolled_count = recognizer.get_enrolled_id_num();
-
+    ESP_LOGD(TAG, "GO2");
     if (enrolled_count < FACE_ID_SAVE_NUMBER && is_enrolling){
+        ESP_LOGD(TAG, "GO2");
         id = recognizer.enroll_id(tensor, landmarks, "", true);
+        ESP_LOGD(TAG, "GO2.3");
         ESP_LOGI(TAG, "Enrolled ID: %d", id);
         rgb_printf(fb, FACE_COLOR_CYAN, "ID[%u]", id);
+        ESP_LOGD(TAG, "GO2.3");
     }
-
-    face_info_t recognize = recognizer.recognize(tensor, landmarks);
-    if(recognize.id >= 0){
-        rgb_printf(fb, FACE_COLOR_GREEN, "ID[%u]: %.2f", recognize.id, recognize.similarity);
-    } else {
+    //ESP_LOGD(TAG, "GO3");
+    ///face_info_t recognize = recognizer.recognize(tensor, landmarks);
+    //ESP_LOGD(TAG, "GO4");
+    ///if(recognize.id >= 0){
+     ///   rgb_printf(fb, FACE_COLOR_GREEN, "ID[%u]: %.2f", recognize.id, recognize.similarity);
+    ///} else {
         rgb_print(fb, FACE_COLOR_RED, "Intruder Alert!");
-    }
-    return recognize.id;
+    ///}
+    //ESP_LOGD(TAG, "GO5");
+    return -1;//recognize.id;
 }
 #endif
 #endif
@@ -769,7 +774,7 @@ static esp_err_t stream_handler(httpd_req_t *req)
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
         uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
 #endif
-        ESP_LOGI(TAG, "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
+/*        ESP_LOGI(TAG, "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
 #if CONFIG_ESP_FACE_DETECT_ENABLED
                       ", %u+%u+%u+%u=%u %s%d"
 #endif
@@ -782,7 +787,7 @@ static esp_err_t stream_handler(httpd_req_t *req)
                  (uint32_t)ready_time, (uint32_t)face_time, (uint32_t)recognize_time, (uint32_t)encode_time, (uint32_t)process_time,
                  (detected) ? "DETECTED " : "", face_id
 #endif
-        );
+        );*/
     }
 
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED

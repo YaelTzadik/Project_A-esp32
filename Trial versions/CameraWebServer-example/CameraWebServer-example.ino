@@ -33,8 +33,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "ESP32-Access-Point";
-const char* password = "123456789";
+const char* ssid = "LAPTOP";
+const char* password = "12345678";
 
 void startCameraServer();
 
@@ -124,20 +124,21 @@ void setup() {
   s->set_vflip(s, 1);
 #endif
 
-  //NEW WIFI CODE
+  /**NEW WIFI CODE
   WiFi.softAP(ssid, password);
   IPAddress IP = WiFi.softAPIP();
-  /**OLD WIFI CODE
+  OLD WIFI CODE**/
   WiFi.begin(ssid, password);
   WiFi.setSleep(false);
-
+ 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
   Serial.println("");
   Serial.println("WiFi connected");
-  **/
+  IPAddress IP = WiFi.localIP();
+  
   startCameraServer();
 
   Serial.print("Camera Ready! Use 'http://");
