@@ -7,12 +7,12 @@
 #include "saveOnSd.h"
 
 // Replace with your network credentials
-const char* ssid = "LAPTOP";
-const char* password = "12345678";
-/**
+// const char* ssid = "LAPTOP";
+// const char* password = "12345678";
+
 const char* ssid = "Yael Tzadik:)";
 const char* password = "0543900569";
-*/
+
 
 // Server Varibles
 String Feedback = "";
@@ -103,7 +103,7 @@ void setup() {
   server.begin();
 
   // Init Vars
-  one_call_lock = true;
+  //one_call_lock = true;
 }
 
 
