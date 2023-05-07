@@ -1,9 +1,16 @@
+#include <custom_hal.hpp>
+#include <cv_cpu_config.h>
+#include <cvconfig.h>
+#include <opencv_data_config.hpp>
+#include <opencv_tests_config.hpp>
+
 #include "driver/rtc_io.h"
 #include <EEPROM.h>
 #include "SD_MMC.h"     
 
 // define the number of bytes you want to access
 #define EEPROM_SIZE 1
+
 
 int imageNum = 0;
 
@@ -26,6 +33,7 @@ void saveImageOnSD() {
     Serial.println("Camera Failed to Capture");
     return;
   }
+  
 // initialize EEPROM 
   EEPROM.begin(EEPROM_SIZE);
   imageNum = EEPROM.read(0) + 1;
@@ -47,4 +55,5 @@ void saveImageOnSD() {
   }
   file.close();
   esp_camera_fb_return(fb);
+  
 }

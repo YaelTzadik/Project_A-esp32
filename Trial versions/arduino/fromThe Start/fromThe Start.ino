@@ -1,3 +1,9 @@
+#include <custom_hal.hpp>
+#include <cv_cpu_config.h>
+#include <cvconfig.h>
+#include <opencv_data_config.hpp>
+#include <opencv_tests_config.hpp>
+
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include "esp_camera.h"
@@ -7,11 +13,11 @@
 #include "saveOnSd.h"
 
 // Replace with your network credentials
-// const char* ssid = "LAPTOP";
-// const char* password = "12345678";
+const char* ssid = "LAPTOP";
+const char* password = "12345678";
 
-const char* ssid = "Yael Tzadik:)";
-const char* password = "0543900569";
+// const char* ssid = "Yael Tzadik:)";
+// const char* password = "0543900569";
 
 
 // Server Varibles
@@ -104,6 +110,8 @@ void setup() {
 
   // Init Vars
   //one_call_lock = true;
+
+  
 }
 
 
