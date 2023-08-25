@@ -148,7 +148,7 @@ void setup() {
 
   //指定Client端靜態IP
   //WiFi.config(IPAddress(192, 168, 201, 100), IPAddress(192, 168, 201, 2), IPAddress(255, 255, 255, 0));
-
+  
   for (int i = 0; i < 2; i++) {
     WiFi.begin(ssid, password);  //執行網路連線
 
@@ -196,9 +196,11 @@ void setup() {
   digitalWrite(4, LOW);
 
   server.begin();
+  Serial.println("finished setup");
 }
 
 void loop() {
+  //Serial.println("starting comand loop");
   Feedback = "";
   Command = "";
   cmd = "";
@@ -232,14 +234,14 @@ void loop() {
           if (currentLine.length() == 0) {
 
             if (cmd == "getstill") {  //取得視訊截圖
-              Serial.println("^^getstill");
+              //Serial.println("^^getstill");
               write_stream();
             } else if (cmd == "status") {  //取得視訊狀態
               status();
               //Serial.println("^^status");
             } else {  //取得管理首頁
               mainpage();
-              //Serial.println("^^main");
+              // Serial.println("^^main");
             }
 
             Feedback = "";
@@ -259,7 +261,7 @@ void loop() {
           }
           currentLine = "";
           Feedback = "";
-          ExecuteCommand();
+          //ExecuteCommand();
         }
       }
     }
@@ -267,6 +269,7 @@ void loop() {
     delay(1);
     client.stop();
   }
+  //Serial.println("ending command loop");
 }
 
 void ExecuteCommand() {
@@ -340,7 +343,7 @@ void ExecuteCommand() {
   } else if (cmd == "uart") {  //UART
     //Line Notify (Smile)
     if (P1 == "happy") {
-      // Serial.println("seen happy face");
+       Serial.println("seen happy face");
       varifier.saw_smile();
       //sendCapturedImage2LineNotify(lineNotifyToken);
     }
@@ -459,7 +462,7 @@ void status() {
 }
 
 void mainpage() {
-  Serial.println("main page setup");
+  // Serial.println("main page setup");
   //回傳HTML首頁或Feedback
   client.println("HTTP/1.1 200 OK");
   client.println("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept");
@@ -502,20 +505,20 @@ void write_stream() {
 
   uint8_t* fbBuf = fb->buf;
   size_t fbLen = fb->len;
-  sobelMotionDetector(fb);
+  //sobelMotionDetector(fb);
   for (size_t n = 0; n < fbLen; n = n + 1024) {
     if (n + 1024 < fbLen) {
       client.write(fbBuf, 1024);
       fbBuf += 1024;
     } else if (fbLen % 1024 > 0) {
       size_t remainder = fbLen % 1024;
-      client.write(temp_buf, remainder);
+      client.write(fbBuf, remainder);
     }
   }
   esp_camera_fb_return(fb);
   pinMode(4, OUTPUT);
   digitalWrite(4, LOW);
-  Serial.println("sent still");
+  //Serial.println("sent still");
 }
 void sobelMotionDetector(camera_fb_t* fb) {
   Serial.println(fb->format);
