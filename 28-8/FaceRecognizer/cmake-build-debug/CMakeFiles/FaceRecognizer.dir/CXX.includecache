@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/cygdrive/c/Users/ASUS/CLionProjects/Semester8Summer/FaceRecognizer/FaceRecognizer.h
+iostream
+-
+vector
+-
+cmath
+-
+
+/cygdrive/c/Users/ASUS/CLionProjects/Semester8Summer/FaceRecognizer/main.cpp
+iostream
+-
+fstream
+-
+string
+-
+vector
+-
+sstream
+-
+algorithm
+-
+iterator
+-
+FaceRecognizer.h
+/cygdrive/c/Users/ASUS/CLionProjects/Semester8Summer/FaceRecognizer/FaceRecognizer.h
+
