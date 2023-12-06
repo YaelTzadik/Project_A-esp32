@@ -34,23 +34,23 @@ void sd_read_targets() {
   lc.convert_str_targets_to_arr(str);
 }
 
-void init_Micro_SD_Card() {
-  // Start the MicroSD card
+// void init_Micro_SD_Card() {
+//   // Start the MicroSD card
 
-  Serial.println("Mounting MicroSD Card");
-  if (!SD_MMC.begin()) {
-    Serial.println("MicroSD Card Mount Failed");
-    return;
-  }
-  uint8_t cardType = SD_MMC.cardType();
-  if (cardType == CARD_NONE) {
-    Serial.println("No MicroSD Card found");
-    return;
-  }
-  // // sd_flash_led();
-  // sd_read_targets();
-  Serial.print("Read all targets from MicroSD Card");
-}
+//   Serial.println("Mounting MicroSD Card");
+//   if (!SD_MMC.begin()) {
+//     Serial.println("MicroSD Card Mount Failed");
+//     return;
+//   }
+//   uint8_t cardType = SD_MMC.cardType();
+//   if (cardType == CARD_NONE) {
+//     Serial.println("No MicroSD Card found");
+//     return;
+//   }
+//   // // sd_flash_led();
+//   // sd_read_targets();
+//   Serial.print("Read all targets from MicroSD Card");
+// }
 
 
 

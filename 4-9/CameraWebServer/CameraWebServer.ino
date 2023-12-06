@@ -104,7 +104,7 @@ void setup() {
   Serial.println("' to connect");
 
   // mount sd card
-  init_Micro_SD_Card();
+  // init_Micro_SD_Card();
 
 }
 
