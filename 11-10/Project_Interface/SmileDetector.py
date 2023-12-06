@@ -49,7 +49,7 @@ class SmileDetector:
         lips_dist_before = np.mean(self.lips_distances[int(self.MAX_FRAMES / 2) + 1: self.MAX_FRAMES])
 
         if 1.5 * lips_dist_before > lips_dist_after:
-            print("not enough teethes")
+            # print("not enough teethes")
             return False
 
         if 1.3 * corner_dist_before > corner_dist_after:
